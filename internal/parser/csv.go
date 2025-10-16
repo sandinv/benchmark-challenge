@@ -16,13 +16,15 @@ import (
 
 // CSVParser parses CSV input and extracts query parameters
 type CSVParser struct {
-	reader *csv.Reader
+	reader     *csv.Reader
+	strictMode bool
 }
 
 // NewCSVParser creates a new CSV parser
-func NewCSVParser(input io.Reader) *CSVParser {
+func NewCSVParser(input io.Reader, strictMode bool) *CSVParser {
 	return &CSVParser{
-		reader: csv.NewReader(input),
+		reader:     csv.NewReader(input),
+		strictMode: strictMode,
 	}
 }
 
@@ -52,15 +54,21 @@ func (p *CSVParser) ParseAndDistribute(ctx context.Context, workerChannels []cha
 			break
 		}
 
-		// Ignore errors on reading records
+		// Handle errors on reading records
 		if err != nil {
+			if p.strictMode {
+				return fmt.Errorf("error reading CSV record: %w", err)
+			}
 			log.Printf("Error reading CSV record: %v", err)
 			continue
 		}
 
 		params, err := p.parseRecord(record)
-		// Ignore malformed records
+		// Handle malformed records
 		if err != nil {
+			if p.strictMode {
+				return fmt.Errorf("error parsing record: %w", err)
+			}
 			log.Printf("Error parsing record: %v", err)
 			continue
 		}

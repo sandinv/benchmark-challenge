@@ -23,6 +23,7 @@ type Config struct {
 	DatabaseConn string
 	Workers      int
 	InputFile    string
+	StrictMode   bool
 }
 
 func init() {
@@ -57,7 +58,7 @@ func main() {
 
 	setupShutdown(cancel)
 
-	runner := benchmark.NewRunner(db, config.Workers)
+	runner := benchmark.NewRunner(db, config.Workers, config.StrictMode)
 	stats, err := runner.Run(ctx, reader)
 	if err != nil {
 		log.Fatal(err)
@@ -73,6 +74,7 @@ func parseFlags() Config {
 
 	flag.IntVar(&config.Workers, "workers", 5, "number of concurrent workers (should be equal or greater than 1)")
 	flag.StringVar(&config.InputFile, "inputFile", "", "CSV file path ( if not provided, reads from stdin")
+	flag.BoolVar(&config.StrictMode, "strict", false, "strict mode: exit on any CSV reading or parsing error (default: false)")
 
 	flag.Parse()
 
@@ -136,6 +138,7 @@ func printUsage() {
 	flag.PrintDefaults()
 	fmt.Fprintf(os.Stderr, "\nExamples:\n")
 	fmt.Fprintf(os.Stderr, "  export DATABASE_URL='postgres://postgres:password@localhost:5432/homework?sslmode=disable'\n")
-	fmt.Fprintf(os.Stderr, "  %s -file query_params.csv -workers 4\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "  %s -inputFile query_params.csv -workers 4\n", os.Args[0])
 	fmt.Fprintf(os.Stderr, "  cat query_params.csv | %s -workers 4\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "  %s -inputFile query_params.csv -workers 10 -strict\n", os.Args[0])
 }
