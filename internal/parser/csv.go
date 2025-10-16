@@ -3,6 +3,7 @@
 package parser
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
 	"hash/fnv"
@@ -27,7 +28,7 @@ func NewCSVParser(input io.Reader) *CSVParser {
 
 // ParseAndDistribute reads CSV input and distributes queries to workers based on hostname
 // The records are read line by line to process large files with minimum impact
-func (p *CSVParser) ParseAndDistribute(workerChannels []chan database.QueryParams) error {
+func (p *CSVParser) ParseAndDistribute(ctx context.Context, workerChannels []chan database.QueryParams) error {
 
 	// Read and skip header
 	if _, err := p.reader.Read(); err != nil {
@@ -38,6 +39,13 @@ func (p *CSVParser) ParseAndDistribute(workerChannels []chan database.QueryParam
 
 	// Read and process records
 	for {
+		// Check for context cancellation
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
 		record, err := p.reader.Read()
 
 		if err == io.EOF {
@@ -60,7 +68,13 @@ func (p *CSVParser) ParseAndDistribute(workerChannels []chan database.QueryParam
 		// Assign to worker based on hostname hash
 		// This ensures the same hostname always goes to the same worker
 		workerID := hostnameHash(params.Hostname) % numWorkers
-		workerChannels[workerID] <- params
+
+		// Try to send to worker channel, but respect context cancellation
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case workerChannels[workerID] <- params:
+		}
 	}
 
 	return nil

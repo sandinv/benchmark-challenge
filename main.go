@@ -5,10 +5,13 @@ package main
 // Add strict mode that would exit on any parsing/reading error
 // Add a context propagation to handler graceful shutdown
 import (
+	"context"
 	"flag"
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"log"
 
@@ -31,7 +34,7 @@ func main() {
 
 	config := parseFlags()
 
-	if config.Workers <=0 {
+	if config.Workers <= 0 {
 		log.Fatalf("workers should be equal or greater than 1")
 	}
 
@@ -48,8 +51,14 @@ func main() {
 		log.Fatalf("can't establish a connection with the database %s", err)
 	}
 
+	// Setup context with cancellation for graceful shutdown
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	setupShutdown(cancel)
+
 	runner := benchmark.NewRunner(db, config.Workers)
-	stats, err := runner.Run(reader)
+	stats, err := runner.Run(ctx, reader)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -91,10 +100,29 @@ func parseInputFile(filepath string) (io.Reader, func(), error) {
 			return nil, nil, err
 		}
 
-		return inputF, func() { inputF.Close() }, nil
+		return inputF, func() {
+			err = inputF.Close()
+			if err != nil {
+				log.Fatal(err)
+			}
+		}, nil
 	}
 
 	return os.Stdin, func() {}, nil
+
+}
+
+func setupShutdown(cancel func()) {
+	// Setup signal handling for graceful shutdown
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+
+	// Start a goroutine to handle shutdown signals
+	go func() {
+		sig := <-sigChan
+		log.Printf("Received signal %v, initiating graceful shutdown...", sig)
+		cancel()
+	}()
 
 }
 

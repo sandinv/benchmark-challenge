@@ -24,8 +24,9 @@ type QueryParams struct {
 }
 
 // Execute runs a query with the given parameters
-func (d *Database) Execute(params QueryParams) error {
-	ctx, cancel := context.WithTimeout(context.Background(), queryTimeout)
+func (d *Database) Execute(ctx context.Context, params QueryParams) error {
+	// Create a timeout context that respects the parent context cancellation
+	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 
 	rows, err := d.db.QueryContext(ctx, query, params.Hostname, params.StartTime, params.EndTime)
