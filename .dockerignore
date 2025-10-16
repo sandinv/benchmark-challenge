@@ -1,0 +1,27 @@
+# Git files
+.git
+.gitignore
+
+# Documentation
+*.md
+README.md
+
+# Docker files
+Dockerfile*
+docker-compose.yml
+.dockerignore
+
+# Build artifacts
+benchmark
+*.exe
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,29 @@
+services:
+  # docker run -d --name timescaledb -p 5432:5432  -v </a/local/data/folder>:/pgdata -e PGDATA=/pgdata -e POSTGRES_PASSWORD=password timescale/timescaledb-ha:pg17
+  timescaledb:
+    build:
+      context: .
+      dockerfile: Dockerfile.db
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PW:-password}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d homework"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  benchmark:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgres://postgres:${POSTGRES_PW:-password}@timescaledb:5432/homework?sslmode=disable
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    volumes:
+      - ./query_params.csv:/app/query_params.csv:ro
+    command: ["-inputFile", "/app/query_params.csv", "-workers", "10"]

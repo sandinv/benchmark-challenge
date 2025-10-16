@@ -45,8 +45,8 @@ vet: ## Run go vet
 
 check: fmt vet lint ## Run all checks
 
-db-up: ## Start TimescaleDB container
-	@echo "Starting TimescaleDB..."
+db-up: ## Start benchmarking
+	@echo "Starting TimescaleDB and benchmark"
 	@export POSTGRES_PW=password && docker-compose up -d
 	@echo "Waiting for database to be ready..."
 	@sleep 5
@@ -57,13 +57,8 @@ db-down: ## Stop TimescaleDB container
 	@docker-compose down
 	@echo "Database stopped"
 
-db-init: ## Initialize database schema
-	@echo "Initializing database schema..."
-	@docker exec -i $$(docker ps -qf "name=timescaledb") psql -U postgres < cpu_usage.sql
-	@echo "Database initialized"
-
 db-shell: ## Open psql shell
-	@docker exec -it $$(docker ps -qf "name=timescaledb") psql -U postgres -d homework
+	@docker-compose exec -it timescaledb psql -U postgres -d homework
 
 all: clean deps fmt vet build ## Clean, download deps, format, vet, and build
 
