@@ -1,4 +1,4 @@
-module benchmark
+module github.com/sandinv/benchmark
 
 go 1.25.1
 

@@ -15,11 +15,16 @@ type Config struct {
 	InputFile    string
 }
 
+func init() {
+	// Override default usage output
+	flag.Usage = printUsage
+}
+
 func main() {
 
 	config := parseFlags()
 
-	parseConnectionString(config)
+	parseConnectionString(&config)
 
 	reader, closeFun, err := parseInputFile(config.InputFile)
 	if err != nil {
@@ -51,14 +56,14 @@ func parseFlags() Config {
 	return config
 }
 
-func parseConnectionString(config Config) {
+func parseConnectionString(config *Config) {
 
 	// Get connection string from environment variable
 	config.DatabaseConn = os.Getenv("DATABASE_URL")
 
 	if config.DatabaseConn == "" {
 		// Provide a default for local development
-		config.DatabaseConn = "postgresql://postgres:password@localhost:5432/homework?sslmode=disable"
+		config.DatabaseConn = "postgres://postgres:password@localhost:5432/homework?sslmode=disable"
 		fmt.Fprintf(os.Stderr, "Warning: DATABASE_URL not set, using default: %s\n", config.DatabaseConn)
 	}
 
@@ -77,4 +82,18 @@ func parseInputFile(filepath string) (io.Reader, func(), error) {
 
 	return os.Stdin, func() {}, nil
 
+}
+
+// printUsage prints usage information
+func printUsage() {
+	fmt.Fprintf(os.Stderr, "Usage: %s [options]\n\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "Database connection is configured via environment variable:\n")
+	fmt.Fprintf(os.Stderr, "  DATABASE_URL - PostgreSQL connection string\n")
+	fmt.Fprintf(os.Stderr, "  Example: postgres://user:password@localhost:5432/homework?sslmode=disable\n\n")
+	fmt.Fprintf(os.Stderr, "Options:\n")
+	flag.PrintDefaults()
+	fmt.Fprintf(os.Stderr, "\nExamples:\n")
+	fmt.Fprintf(os.Stderr, "  export DATABASE_URL='postgres://postgres:password@localhost:5432/homework?sslmode=disable'\n")
+	fmt.Fprintf(os.Stderr, "  %s -file query_params.csv -workers 4\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "  cat query_params.csv | %s -workers 4\n", os.Args[0])
 }
