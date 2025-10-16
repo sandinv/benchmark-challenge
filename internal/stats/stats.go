@@ -35,6 +35,10 @@ type Statistics struct {
 	MaxTime        time.Duration
 	MedianTime     time.Duration
 	AvgTime        time.Duration
+	P50            time.Duration // 50th percentile (median)
+	P90            time.Duration // 90th percentile
+	P95            time.Duration // 95th percentile
+	P99            time.Duration // 99th percentile
 
 	durations []time.Duration
 	mu        sync.Mutex
@@ -73,7 +77,7 @@ func (s *Statistics) Compute() {
 		return
 	}
 
-	// Sort durations for median calculation
+	// Sort durations for median and percentile calculations
 	slices.Sort(s.durations)
 
 	// Min and Max
@@ -94,6 +98,35 @@ func (s *Statistics) Compute() {
 		total += d
 	}
 	s.AvgTime = total / time.Duration(len(s.durations))
+
+	// Percentiles
+	s.P90 = s.percentile(90)
+	s.P95 = s.percentile(95)
+	s.P99 = s.percentile(99)
+}
+
+// percentile calculates the given percentile from sorted durations
+// Must be called with mutex locked and after durations are sorted
+func (s *Statistics) percentile(p float64) time.Duration {
+	if len(s.durations) == 0 {
+		return 0
+	}
+
+	// Use linear interpolation method
+	n := float64(len(s.durations))
+	rank := (p / 100.0) * (n - 1)
+	lower := int(rank)
+	upper := lower + 1
+
+	// Handle edge cases
+	if upper >= len(s.durations) {
+		return s.durations[len(s.durations)-1]
+	}
+
+	// Linear interpolation between the two nearest values
+	fraction := rank - float64(lower)
+	return time.Duration(float64(s.durations[lower]) +
+		fraction*float64(s.durations[upper]-s.durations[lower]))
 }
 
 // Print outputs the statistics to the provided output
@@ -105,13 +138,20 @@ func (s *Statistics) Print(out io.Writer) {
 	fmt.Fprintf(out, "Total processing time:       %v\n", s.ProcessingTime)
 
 	if len(s.durations) > 0 {
-		fmt.Fprintf(out, "Minimum query time:          %v\n", s.MinTime)
-		fmt.Fprintf(out, "Median query time:           %v\n", s.MedianTime)
-		fmt.Fprintf(out, "Average query time:          %v\n", s.AvgTime)
-		fmt.Fprintf(out, "Maximum query time:          %v\n", s.MaxTime)
-		fmt.Fprintf(out, "Successful queries:          %d/%d (%.1f%%)\n",
+		fmt.Fprintf(out, "Successful queries:          %d/%d (%.1f%%)\n\n",
 			len(s.durations), s.TotalQueries,
 			float64(len(s.durations))/float64(s.TotalQueries)*100)
+
+		fmt.Fprintln(out, "Query Time Statistics:")
+		fmt.Fprintf(out, "  Minimum:     %v\n", s.MinTime)
+		fmt.Fprintf(out, "  Average:     %v\n", s.AvgTime)
+		fmt.Fprintf(out, "  Median:      %v\n", s.MedianTime)
+		fmt.Fprintf(out, "  Maximum:     %v\n\n", s.MaxTime)
+
+		fmt.Fprintln(out, "Percentiles:")
+		fmt.Fprintf(out, "  P90:          %v\n", s.P90)
+		fmt.Fprintf(out, "  P95:          %v\n", s.P95)
+		fmt.Fprintf(out, "  P99:          %v\n", s.P99)
 	} else {
 		fmt.Fprintln(out, "No successful queries to report timing statistics")
 	}
