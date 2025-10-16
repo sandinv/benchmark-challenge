@@ -1,12 +1,19 @@
 package main
 
+// TODO:
+// Add to the README.md that SSL is not supported
+// Add strict mode that would exit on any parsing/reading error
+// Add a context propagation to handler graceful shutdown
 import (
 	"flag"
 	"fmt"
 	"io"
 	"os"
 
-	"benchmark/internal/database"
+	"log"
+
+	"github.com/sandinv/benchmark/internal/benchmark"
+	"github.com/sandinv/benchmark/internal/database"
 )
 
 type Config struct {
@@ -24,23 +31,30 @@ func main() {
 
 	config := parseFlags()
 
+	if config.Workers <=0 {
+		log.Fatalf("workers should be equal or greater than 1")
+	}
+
 	parseConnectionString(&config)
 
 	reader, closeFun, err := parseInputFile(config.InputFile)
 	if err != nil {
-		panic(fmt.Sprintf("couldn't read input file: %s", err))
+		log.Fatalf("couldn't read input file: %s", err)
 	}
 	defer closeFun()
 
 	db, err := database.Connect(config.DatabaseConn)
 	if err != nil {
-		panic(fmt.Sprintf("can't establish a connection with the database %s", err))
+		log.Fatalf("can't establish a connection with the database %s", err)
 	}
 
-	db.ConfigurePool(config.Workers)
+	runner := benchmark.NewRunner(db, config.Workers)
+	stats, err := runner.Run(reader)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	_ = reader
-	_ = db
+	stats.Print(os.Stdout)
 
 }
 
@@ -48,7 +62,7 @@ func parseFlags() Config {
 
 	config := Config{}
 
-	flag.IntVar(&config.Workers, "workers", 1, "number of concurrent workers")
+	flag.IntVar(&config.Workers, "workers", 5, "number of concurrent workers (should be equal or greater than 1)")
 	flag.StringVar(&config.InputFile, "inputFile", "", "CSV file path ( if not provided, reads from stdin")
 
 	flag.Parse()

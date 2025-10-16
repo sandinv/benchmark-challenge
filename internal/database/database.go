@@ -1,4 +1,8 @@
-// Package database implements utility functions to access the database
+// Package database provides functions for connecting to a PostgreSQL-compatible database,
+// configuring the connection pool, and executing queries for the benchmarking tool.
+//
+// It handles validation of connection strings, pinging the database to ensure availability,
+// and setting up optimal connection pool settings based on worker count.
 package database
 
 import (
