@@ -42,7 +42,14 @@ func Connect(connectionString string) (*Database, error) {
 
 // ConfigurePool sets up the connection pool for optimal performance
 func (d *Database) ConfigurePool(workers int) {
-	d.db.SetMaxOpenConns(workers * 2)
+
+	maxOpenConns := workers
+	if workers < 5 {
+		maxOpenConns = maxOpenConns * 2
+	}
+
+	// Max connection would equal to workers * 2 if the number of workers < 5
+	d.db.SetMaxOpenConns(maxOpenConns)
 	d.db.SetMaxIdleConns(workers)
-	d.db.SetConnMaxLifetime(time.Minute)
+	d.db.SetConnMaxLifetime(5 * time.Minute)
 }
