@@ -1,9 +1,5 @@
 package main
 
-// TODO:
-// Add to the README.md that SSL is not supported
-// Add strict mode that would exit on any parsing/reading error
-// Add a context propagation to handler graceful shutdown
 import (
 	"context"
 	"flag"

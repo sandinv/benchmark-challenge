@@ -17,3 +17,4 @@ EOSQL\n\
 # Set default password (can be overridden with environment variable)
 ENV POSTGRES_PASSWORD=password
 
+
