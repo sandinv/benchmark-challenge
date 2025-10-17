@@ -6,7 +6,7 @@
 //   - Streaming CSV input processing from file or stdin
 //   - Graceful shutdown via signal handling (SIGINT, SIGTERM)
 //   - Strict mode for data validation
-//   - Comprehensive statistics with percentiles (P50, P90, P95, P99)
+//   - Comprehensive statistics with percentiles (P90, P95, P99)
 //
 // Usage:
 //

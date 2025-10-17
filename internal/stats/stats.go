@@ -3,7 +3,7 @@
 //
 // It allows you to record query durations, count errors, and compute
 // summary metrics such as total time, min/max/average durations, median,
-// and percentiles (P50, P90, P95, P99). This package is useful for
+// and percentiles (P90, P95, P99). This package is useful for
 // benchmarking database queries or other time-sensitive operations.
 //
 // Typical usage:
@@ -35,7 +35,6 @@ type Statistics struct {
 	MaxTime        time.Duration
 	MedianTime     time.Duration
 	AvgTime        time.Duration
-	P50            time.Duration // 50th percentile (median)
 	P90            time.Duration // 90th percentile
 	P95            time.Duration // 95th percentile
 	P99            time.Duration // 99th percentile
