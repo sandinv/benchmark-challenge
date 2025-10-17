@@ -1,13 +1,14 @@
 # TimescaleDB Query Benchmark Tool
 
-A command-line tool for benchmarking SELECT query performance against TimescaleDB with concurrent workers.
+A command-line tool for benchmarking query performance against TimescaleDB with concurrent workers.
 
 ## Features
 
 - **Concurrent Query Execution**: Configure multiple workers to execute queries in parallel
 - **Streaming Input Processing**: Processes queries as they are read, without waiting for all input
 - **Flexible Input**: Accepts CSV files or stdin
-- **Comprehensive Statistics**: Reports query count, processing time, min/median/avg/max query times
+- **Comprehensive Statistics**: Reports query count, total processing time, and query duration statistics, including minimum, median, average, maximum, and percentile values.
+
 
 ## Prerequisites
 
@@ -17,19 +18,22 @@ A command-line tool for benchmarking SELECT query performance against TimescaleD
 
 ## Installation
 
-1. Clone or download this repository
+1. Clone or download this repository.
 
 2. Build the tool:
    ```bash
-   go build -o benchmark
+   make build
    ```
+Alternatively, you can use the included docker-compose.yml file to spin up:
+-	a PostgreSQL database with the appropriate schema and sample data
+-	the CLI tool, ready to run benchmarks against it
 
 ## Usage
 
 ### Basic Usage
 
 ```bash
-# Set database connection string
+# Set the database connection string
 export DATABASE_URL='postgres://postgres:password@localhost:5432/homework?sslmode=disable'
 
 # Using a CSV file
@@ -38,6 +42,8 @@ export DATABASE_URL='postgres://postgres:password@localhost:5432/homework?sslmod
 # Using stdin
 cat query_params.csv | ./benchmark -workers 4
 ```
+
+A sample `query_params.csv` is included in this repository for testing purposes.
 
 ### Configuration
 
@@ -57,10 +63,15 @@ export DATABASE_URL='postgresql://user:password@host:port/database?sslmode=disab
 - Follows 12-factor app best practices
 - Better security for production environments
 
-You can copy `.env.example` to `.env` and modify it:
+You can create a `.env` file for local development:
 ```bash
-cp .env.example .env
-# Edit .env with your credentials
+# Create .env file
+cat > .env << 'EOF'
+DATABASE_URL='postgres://postgres:password@localhost:5432/homework?sslmode=disable'
+POSTGRES_PW=password
+EOF
+
+# Load environment variables
 source .env
 ```
 
@@ -99,9 +110,11 @@ export DATABASE_URL='postgres://postgres:password@localhost:5432/homework?sslmod
 #### Example 2: Using .env file
 
 ```bash
-# Create and configure .env file
-cp .env.example .env
-# Edit .env with your credentials
+# Create .env file
+cat > .env << 'EOF'
+DATABASE_URL='postgres://postgres:password@localhost:5432/homework?sslmode=disable'
+POSTGRES_PW=password
+EOF
 
 # Load environment and run
 source .env
@@ -139,29 +152,35 @@ export DATABASE_URL='postgres://postgres:password@localhost:5432/homework?sslmod
 
 ## Setting Up TimescaleDB
 
-1. Start TimescaleDB using Docker Compose:
-   ```bash
-   export POSTGRES_PW=password
-   docker-compose up -d
-   ```
+The Docker Compose setup automatically creates the database with schema and sample data.
 
-2. Set up your environment:
+1. Set up your environment:
    ```bash
-   # Copy and configure environment file
-   cp .env.example .env
+   # Create environment file
+   cat > .env << 'EOF'
+DATABASE_URL='postgres://postgres:password@localhost:5432/homework?sslmode=disable'
+POSTGRES_PW=password
+EOF
    source .env
    ```
 
-3. Initialize the database schema:
+2. Start TimescaleDB using Docker Compose:
    ```bash
-   docker exec -i $(docker ps -qf "name=timescaledb") psql -U postgres < cpu_usage.sql
+   # The database image includes schema (cpu_usage.sql) and data (cpu_usage.csv)
+   docker-compose up -d
    ```
 
-4. Load sample data (if you have cpu_usage.csv with data):
+3. Wait for the database to be ready (first startup takes longer due to data loading):
    ```bash
-   docker exec -i $(docker ps -qf "name=timescaledb") psql -U postgres -d homework \
-     -c "\COPY cpu_usage FROM STDIN WITH CSV HEADER" < cpu_usage.csv
+   # Check logs to see when initialization is complete
+   docker-compose logs -f timescaledb
    ```
+
+The TimescaleDB container will automatically:
+- Create the `homework` database
+- Enable TimescaleDB extension
+- Create the `cpu_usage` hypertable
+- Load all data from `cpu_usage.csv`
 
 ## Output
 
