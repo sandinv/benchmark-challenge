@@ -1,5 +1,14 @@
 // Package parser provides functionality for parsing benchmark input records
 // from CSV file or standard input, and distributing them to worker goroutines for concurrent query execution.
+//
+// The parser implements hostname-based affinity routing using FNV-1a hashing to ensure
+// queries for the same hostname are consistently assigned to the same worker.
+//
+// It supports:
+//   - Streaming CSV processing (line-by-line reading)
+//   - Context cancellation for graceful shutdown
+//   - Strict mode: exits immediately on any CSV reading or parsing error
+//   - Lenient mode (default): logs errors and continues processing
 package parser
 
 import (

@@ -3,6 +3,9 @@
 //
 // It handles validation of connection strings, pinging the database to ensure availability,
 // and setting up optimal connection pool settings based on worker count.
+//
+// Query execution supports context cancellation for graceful shutdown, with a 3-second
+// timeout per query. The package currently does not support SSL/TLS connections.
 package database
 
 import (

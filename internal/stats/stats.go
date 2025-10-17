@@ -2,9 +2,9 @@
 // statistics related to query execution.
 //
 // It allows you to record query durations, count errors, and compute
-// summary metrics such as total time, min/max/average durations, and median.
-// This package is useful for benchmarking database queries or other
-// time-sensitive operations.
+// summary metrics such as total time, min/max/average durations, median,
+// and percentiles (P50, P90, P95, P99). This package is useful for
+// benchmarking database queries or other time-sensitive operations.
 //
 // Typical usage:
 //
