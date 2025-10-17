@@ -158,9 +158,9 @@ The Docker Compose setup automatically creates the database with schema and samp
    ```bash
    # Create environment file
    cat > .env << 'EOF'
-DATABASE_URL='postgres://postgres:password@localhost:5432/homework?sslmode=disable'
-POSTGRES_PW=password
-EOF
+   DATABASE_URL='postgres://postgres:password@localhost:5432/homework?sslmode=disable'
+   POSTGRES_PW=password
+   EOF
    source .env
    ```
 
