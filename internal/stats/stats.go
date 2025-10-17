@@ -131,29 +131,29 @@ func (s *Statistics) percentile(p float64) time.Duration {
 
 // Print outputs the statistics to the provided output
 func (s *Statistics) Print(out io.Writer) {
-	fmt.Fprintln(out, "\n"+strings.Repeat("=", 60))
-	fmt.Fprintln(out, "BENCHMARK RESULTS")
-	fmt.Fprintln(out, strings.Repeat("=", 60))
-	fmt.Fprintf(out, "Number of queries processed: %d\n", s.TotalQueries)
-	fmt.Fprintf(out, "Total processing time:       %v\n", s.ProcessingTime)
+	_, _ = fmt.Fprintln(out, "\n"+strings.Repeat("=", 60))
+	_, _ = fmt.Fprintln(out, "BENCHMARK RESULTS")
+	_, _ = fmt.Fprintln(out, strings.Repeat("=", 60))
+	_, _ = fmt.Fprintf(out, "Number of queries processed: %d\n", s.TotalQueries)
+	_, _ = fmt.Fprintf(out, "Total processing time:       %v\n", s.ProcessingTime)
 
 	if len(s.durations) > 0 {
-		fmt.Fprintf(out, "Successful queries:          %d/%d (%.1f%%)\n\n",
+		_, _ = fmt.Fprintf(out, "Successful queries:          %d/%d (%.1f%%)\n\n",
 			len(s.durations), s.TotalQueries,
 			float64(len(s.durations))/float64(s.TotalQueries)*100)
 
-		fmt.Fprintln(out, "Query Time Statistics:")
-		fmt.Fprintf(out, "  Minimum:     %v\n", s.MinTime)
-		fmt.Fprintf(out, "  Average:     %v\n", s.AvgTime)
-		fmt.Fprintf(out, "  Median:      %v\n", s.MedianTime)
-		fmt.Fprintf(out, "  Maximum:     %v\n\n", s.MaxTime)
+		_, _ = fmt.Fprintln(out, "Query Time Statistics:")
+		_, _ = fmt.Fprintf(out, "  Minimum:     %v\n", s.MinTime)
+		_, _ = fmt.Fprintf(out, "  Average:     %v\n", s.AvgTime)
+		_, _ = fmt.Fprintf(out, "  Median:      %v\n", s.MedianTime)
+		_, _ = fmt.Fprintf(out, "  Maximum:     %v\n\n", s.MaxTime)
 
-		fmt.Fprintln(out, "Percentiles:")
-		fmt.Fprintf(out, "  P90:          %v\n", s.P90)
-		fmt.Fprintf(out, "  P95:          %v\n", s.P95)
-		fmt.Fprintf(out, "  P99:          %v\n", s.P99)
+		_, _ = fmt.Fprintln(out, "Percentiles:")
+		_, _ = fmt.Fprintf(out, "  P90:          %v\n", s.P90)
+		_, _ = fmt.Fprintf(out, "  P95:          %v\n", s.P95)
+		_, _ = fmt.Fprintf(out, "  P99:          %v\n", s.P99)
 	} else {
-		fmt.Fprintln(out, "No successful queries to report timing statistics")
+		_, _ = fmt.Fprintln(out, "No successful queries to report timing statistics")
 	}
-	fmt.Fprintln(out, strings.Repeat("=", 60))
+	_, _ = fmt.Fprintln(out, strings.Repeat("=", 60))
 }

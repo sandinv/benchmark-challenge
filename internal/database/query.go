@@ -24,7 +24,7 @@ type QueryParams struct {
 }
 
 // Execute runs a query with the given parameters
-func (d *Database) Execute(ctx context.Context, params QueryParams) error {
+func (d *Database) Execute(ctx context.Context, params QueryParams) (err error) {
 	// Create a timeout context that respects the parent context cancellation
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
@@ -33,7 +33,12 @@ func (d *Database) Execute(ctx context.Context, params QueryParams) error {
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
+	defer func() {
+		closeErr := rows.Close()
+		if err == nil {
+			err = closeErr
+		}
+	}()
 
 	// Consume all rows - each row represents one minute with max/min CPU usage
 	for rows.Next() {
