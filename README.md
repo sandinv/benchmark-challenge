@@ -37,7 +37,7 @@ Alternatively, you can use the included docker-compose.yml file to spin up:
 export DATABASE_URL='postgres://postgres:password@localhost:5432/homework?sslmode=disable'
 
 # Using a CSV file
-./benchmark -file query_params.csv -workers 4
+./benchmark -inputFile query_params.csv -workers 4
 
 # Using stdin
 cat query_params.csv | ./benchmark -workers 4
@@ -164,16 +164,24 @@ EOF
    source .env
    ```
 
-2. Start TimescaleDB using Docker Compose:
+2. Start TimescaleDB using Make:
    ```bash
    # The database image includes schema (cpu_usage.sql) and data (cpu_usage.csv)
-   docker-compose up -d
+   make db-up
    ```
 
-3. Wait for the database to be ready (first startup takes longer due to data loading):
+3. (Optional) Check logs or access the database:
    ```bash
    # Check logs to see when initialization is complete
    docker-compose logs -f timescaledb
+   
+   # Or open a psql shell
+   make db-shell
+   ```
+
+4. When finished, stop the database:
+   ```bash
+   make db-down
    ```
 
 The TimescaleDB container will automatically:
